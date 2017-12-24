@@ -2,19 +2,12 @@
 #include"stdio.h"
 #include<stdlib.h>
 #include <string.h>
-/*#include <stdio.h>*/
-#include <unistd.h>
-
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <unistd.h>
 #include <sys/time.h>
 
 /* TODO: Support non-square matrices */
 void print_matrix(float **m, int rows, int cols) {
-     int r,c;
-	  
+     int r,c;	  
      printf("[ ");
      for (r = 0; r < rows; r++) {
 	  printf("[ ");
@@ -29,37 +22,57 @@ void print_matrix(float **m, int rows, int cols) {
      printf("]\n"); 
 }
 
+long compute_sum(struct matrix *mat) {
+    long sum = 0;
+    for (int i = 0; i < mat->rows; ++i) {
+        for (int j = 0; j < mat->cols; ++j) {
+            if (mat->type == contig) {
+                sum += ((float *)mat->m)[i*mat->rows + j];
+            }
+            else if (mat->type == naive) {
+                sum += mat->m[i][j];
+            }
+        }
+    }
+    return sum;
+}
+
 /* Runs an arbitrary multiply implementation and times it. 
  * @f: matrix multiplication function.
  * @n: size of matrix (assuming square for simplicity)
  * @block: block size
  */
-void run_multiply(float ** (*f) (float **, float **, int, int, float **, int, int), 
-                  int n, int block) 
+void run_multiply(struct matrix* (*f) (struct matrix *, struct matrix *, struct matrix*), int n, int block,
+                 char *name) 
 {
-     printf("in run multiply!\n");
-     float **a = rand_matrix(n,n);
-     float **b = rand_matrix(n,n);
-     float **c = alloc_matrix(n,n);
-     f(c,a,n,n,b,n,n);
-     printf("f done!\n");
-     print_matrix(c,n,n);
+     struct matrix *a = rand_matrix(n,n);
+     struct matrix *b = rand_matrix(n,n);
+     struct matrix *c = alloc_matrix_naive(n,n);
+    
+     /* Time only the multiply function call */
+     struct timeval start, end, diff;
+     gettimeofday(&start, 0);
+     f(c,a,b);
+     gettimeofday(&end, 0);
+     timersub(&end, &start, &diff);
+     /* sanity check with computing sum of matrix */
+     long sum = compute_sum(c);
+     printf("%s took time: %ld.%06ld (result=%ld)\n",
+        name, (long) diff.tv_sec, (long) diff.tv_usec, sum);
+
      /* Cleanup */
-     /*free(a);*/
-     /*free(b);*/
-     /*free(c);*/
+     free_matrix(a);
+     free_matrix(b);
+     free_matrix(c);
 }
 
 int main(int argc, char *argv[]) {
     
     /* Technically, need to support non-square matrices, but all the results we care about are only
      * square matrices, so just accept n as a parameter */
-
     int n = 128;
-    /* Need a smarter way to choose blocl size */
-    int b = n/2;
+    int ch, b;
 
-    int ch;
     while ((ch = getopt(argc, argv, "n:b:")) != -1) {
         switch (ch) {
             case 'n':
@@ -74,8 +87,10 @@ int main(int argc, char *argv[]) {
                 exit(1);
         }
     }
+    /* Need a smarter way to choose block size */
+    b = n/2;
     
     printf("n = %d\n", n);
-
-    run_multiply(mult_naive, n, b);
+    /* run it with different optimization schemes */
+    run_multiply(mult_naive, n, b, "naive");
 }
