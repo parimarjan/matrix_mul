@@ -107,8 +107,8 @@ int main(int argc, char *argv[]) {
 #endif
     
     /* contiguous arrays */
-    run_multiply(contig_naive, n, "contig_naive", contig);
-    run_multiply(contig_naive_par, n, "contig_naive_par", contig);
+    run_multiply(contig_naive_kj, n, "contig_naive", contig);
+    run_multiply(contig_naive_kj_par, n, "contig_naive_par", contig);
     run_multiply(contig_blocked, n, "contig_blocked", contig);
-
+    run_multiply(contig_blocked_par, n, "contig_blocked_par", contig);
 }

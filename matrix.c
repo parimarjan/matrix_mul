@@ -277,8 +277,25 @@ void contig_blocked(struct matrix *C, struct matrix *A, struct matrix *B) {
     }
 }
 
-/* TODO: Switch the order of j and k loops */
-void contig_naive(struct matrix *C, struct matrix *A, struct matrix *B) {
+void thread_workload_contig_blocked(struct matrix *C, struct matrix *A, struct matrix *B, int tid) {
+    int block_size = A->rows / 4;
+    /*int block_size = 16;*/
+    for (int kk = 0; kk < C->rows; kk += block_size) {
+        for (int ii = 0; ii < A->rows; ii += block_size) {
+            for (int jj = 0; jj < B->cols; jj += block_size) {
+                for (int k = kk; k < min(kk + block_size, C->rows); k++) {
+                    for (int i = ii+tid; i < min(ii + block_size, A->rows); i+= NUM_PARALLEL_THREADS) {
+                        for (int j = jj; j < min(jj + block_size, B->cols); j++) {
+                            contig_data(C)[i*C->rows + j] += contig_data(A)[i*A->rows + k] * contig_data(B)[k*B->cols + j];
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void contig_naive_kj(struct matrix *C, struct matrix *A, struct matrix *B) {
     for (int i = 0; i < A->rows; i++) {
         for (int k = 0; k < C->rows; k++) {
             for (int j = 0; j < B->cols; j++) {
@@ -312,10 +329,18 @@ void thread_workload_contig_naive(struct matrix *C, struct matrix *A, struct mat
 }
 
 /* Parallelizing just the outer loop */
-void contig_naive_par(struct matrix *C, struct matrix *A, struct matrix *B) {
+void contig_naive_kj_par(struct matrix *C, struct matrix *A, struct matrix *B) {
 #pragma omp parallel for
     for (int i = 0; i < NUM_PARALLEL_THREADS; i++) {
       thread_workload_contig_naive(C, A, B, i);
+    }
+}
+
+/* Again, just parallelizing the outermost loop */
+void contig_blocked_par(struct matrix *C, struct matrix *A, struct matrix *B) {
+#pragma omp parallel for
+    for (int i = 0; i < NUM_PARALLEL_THREADS; i++) {
+      thread_workload_contig_blocked(C, A, B, i);
     }
 }
 

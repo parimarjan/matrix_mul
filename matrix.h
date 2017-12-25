@@ -34,12 +34,8 @@ void ac_mat_mul6(struct matrix *, struct matrix *, struct matrix *);
 void ac_mat_mul7(struct matrix *, struct matrix *, struct matrix *);
 
 /* contiguous allocation */
-void contig_naive(struct matrix *, struct matrix *, struct matrix *);
-void contig_naive_par(struct matrix *, struct matrix *, struct matrix *);
+void contig_naive_kj(struct matrix *, struct matrix *, struct matrix *);
+void contig_naive_kj_par(struct matrix *, struct matrix *, struct matrix *);
 
 void contig_blocked(struct matrix *, struct matrix *, struct matrix *);
-
-//void contig_transposed(struct matrix *, struct matrix *, struct matrix *);
-//void contig_blocked_par(struct matrix *, struct matrix *, struct matrix *);
-//void contig_transposed_par(struct matrix *, struct matrix *, struct matrix *);
-
+void contig_blocked_par(struct matrix *, struct matrix *, struct matrix *);
