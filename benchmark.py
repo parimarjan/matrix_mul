@@ -55,5 +55,11 @@ for power in range(args.start,args.end,1):
     power_timings.append(run_matrix_test(num_els))
 
 # plotting time!
+for k in power_timings[0]:
+    # each of the keys, like naive etc.
+    timings = [p[k] for p in power_timings]
+
+for t in timings:
+    print(t)
 
 

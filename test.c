@@ -27,9 +27,8 @@ long compute_sum(struct matrix *mat) {
     for (int i = 0; i < mat->rows; ++i) {
         for (int j = 0; j < mat->cols; ++j) {
             if (mat->type == contig) {
-                sum += ((float *)mat->m)[i*mat->rows + j];
-            }
-            else if (mat->type == naive) {
+                sum += ((float *)mat->m)[i*mat->rows + j]; 
+            } else if (mat->type == naive || mat->type == ac) {
                 sum += mat->m[i][j];
             }
         }
@@ -42,12 +41,11 @@ long compute_sum(struct matrix *mat) {
  * @n: size of matrix (assuming square for simplicity)
  * @block: block size
  */
-void run_multiply(struct matrix* (*f) (struct matrix *, struct matrix *, struct matrix*), int n, int block,
-                 char *name) 
+void run_multiply(struct matrix* (*f) (struct matrix *, struct matrix *, struct matrix*), int n, int block, char *name, enum alloc_type type) 
 {
-     struct matrix *a = rand_matrix(n,n);
-     struct matrix *b = rand_matrix(n,n);
-     struct matrix *c = alloc_matrix_naive(n,n);
+     struct matrix *a = rand_matrix(n,n, type);
+     struct matrix *b = rand_matrix(n,n, type);
+     struct matrix *c = alloc_matrix(n,n, type);
     
      /* Time only the multiply function call */
      struct timeval start, end, diff;
@@ -92,5 +90,14 @@ int main(int argc, char *argv[]) {
     
     printf("n = %d\n", n);
     /* run it with different optimization schemes */
-    run_multiply(mult_naive, n, b, "naive");
+    run_multiply(mult_naive, n, 0, "naive", naive);
+    /* attractive chaos based implementation */
+    run_multiply(ac_mat_mul0, n, 0, "ac0", ac);
+    run_multiply(ac_mat_mul1, n, 0, "ac1", ac);
+    run_multiply(ac_mat_mul2, n, 0, "ac2", ac);
+
+#ifdef HAVE_CBLAS
+    run_multiply(ac_mat_mul6, n, 0, "ac6", ac);
+#endif
+
 }
