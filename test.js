@@ -11,7 +11,7 @@ b = matrix.rand_matrix(n,n);
 c = matrix.create_matrix(n,n);
 
 /* Just want to time this part */
-console.time('someFunction');
+console.time('javascript_time');
 matrix.mult(c,a,b);
-console.timeEnd('someFunction');
+console.timeEnd('javascript_time');
 

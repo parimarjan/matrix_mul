@@ -260,7 +260,10 @@ void ac_mat_mul6(struct matrix *C, struct matrix *A, struct matrix *A)
 
 /* contiguous stuff */
 void contig_blocked(struct matrix *C, struct matrix *A, struct matrix *B) {
-    int block_size = A->rows / 8;
+    int block_size;
+    if (A->rows > 32) block_size = A->rows / 2;
+    else block_size = 1;
+
     /*int block_size = 16;*/
     for (int kk = 0; kk < C->rows; kk += block_size) {
         for (int ii = 0; ii < A->rows; ii += block_size) {

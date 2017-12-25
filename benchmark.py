@@ -3,6 +3,7 @@ import time
 import argparse
 from collections import defaultdict
 import re
+import matplotlib.pyplot as plt
 
 NUM_TRIES = 5
 
@@ -18,15 +19,13 @@ def get_time_from_string(string):
     else:
         return None
 
-def run_matrix_test(num_els):
-    cmd_template = './test -n {n}'
+def run_matrix_test(num_els, cmd_template):
     cmd = cmd_template.format(n = num_els)
     cmd = cmd.split()
     timings = defaultdict(list)
     avg_timings = defaultdict(float)
 
     for i in range(NUM_TRIES):
-        print('iteration: ', i)
         process = sp.Popen(cmd, stdout=sp.PIPE)
         # process.wait()
         stdout = process.communicate()[0]
@@ -49,17 +48,39 @@ parser.add_argument("-end", "-e", type=int, required=False,
                     default=9, help="end index of powers")
 args = parser.parse_args()
 
-power_timings = []
+# power_timings = []
+
+all_timings = defaultdict(list)
+
+c_template = './test -n {n}'
+js_template = 'node test.js -n {n}'
+
 for power in range(args.start,args.end,1):
     num_els = 2**power
-    power_timings.append(run_matrix_test(num_els))
+    avg_timings = run_matrix_test(num_els, c_template)
+    for k,v in avg_timings.iteritems():
+        all_timings[k].append(v)
 
-# plotting time!
-for k in power_timings[0]:
-    # each of the keys, like naive etc.
-    timings = [p[k] for p in power_timings]
+    avg_timings2 = run_matrix_test(num_els, js_template)
+    for k, v in avg_timings2.iteritems():
+        all_timings['javascript'].append(float(v)/1000)
 
-for t in timings:
-    print(t)
+
+x_vals = [2**p for p in range(args.start, args.end, 1)]
+x_label = 'number of elements'
+y_label = 'time in seconds'
+colors = ["r-", "b--", "g-", "c--"]
+
+i = 0
+for k,v in all_timings.iteritems():
+    plt.plot(x_vals, v, colors[i], label=k)
+    i += 1
+
+plt.xlabel(x_label, size=15)
+plt.ylabel(y_label, size=15)
+plt.legend(loc='best')
+
+# plt.show()
+plt.savefig("fig.png")
 
 

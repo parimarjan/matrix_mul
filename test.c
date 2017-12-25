@@ -90,25 +90,26 @@ int main(int argc, char *argv[]) {
     /* Need a smarter way to choose block size */ 
     printf("n = %d\n", n);
     /* run it with different optimization schemes */
-    /*run_multiply(mult_naive, n, "naive", naive);*/
-    run_multiply(mult_naive_kj, n, "naive_kj", naive);
+    run_multiply(mult_naive, n, "C Naive", naive);
+    /*run_multiply(mult_naive_kj, n, "C Naive_kj", naive);*/
 
     /* attractive chaos based implementation */
-    /*run_multiply(ac_mat_mul0, n, "ac0", ac);*/
-    /*run_multiply(ac_mat_mul1_kj, n, "ac1_kj", ac);*/
+    /*run_multiply(ac_mat_mul0, n, "ac_naive", ac);*/
+    /*run_multiply(ac_mat_mul1, n, "ac_transposed", ac);*/
+    /*run_multiply(ac_mat_mul1_kj, n, "ac_transposed_kj", ac);*/
 
 #ifdef __SSE__
-    run_multiply(ac_mat_mul2, n, "ac2", ac);
-    run_multiply(ac_mat_mul7, n, "ac7", ac);
+    /*run_multiply(ac_mat_mul2, n, "ac_sse", ac);*/
+    /*run_multiply(ac_mat_mul7, n, "ac_sse_blocked", ac);*/
 #endif
 
-#ifdef HAVE_CBLAS
-    run_multiply(ac_mat_mul6, n, "ac6", ac);
-#endif
+/*#ifdef HAVE_CBLAS*/
+    /*run_multiply(ac_mat_mul6, n, "ac_blas", ac);*/
+/*#endif*/
     
     /* contiguous arrays */
-    run_multiply(contig_naive_kj, n, "contig_naive", contig);
-    run_multiply(contig_naive_kj_par, n, "contig_naive_par", contig);
-    run_multiply(contig_blocked, n, "contig_blocked", contig);
-    run_multiply(contig_blocked_par, n, "contig_blocked_par", contig);
+    /*run_multiply(contig_naive_kj, n, "contig_naive", contig);*/
+    /*run_multiply(contig_naive_kj_par, n, "contig_naive_par", contig);*/
+    /*run_multiply(contig_blocked, n, "contig_blocked", contig);*/
+    /*run_multiply(contig_blocked_par, n, "contig_blocked_par", contig);*/
 }
