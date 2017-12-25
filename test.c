@@ -23,14 +23,18 @@ void print_matrix(float **m, int rows, int cols) {
 }
 
 long compute_sum(struct matrix *mat) {
-    long sum = 0;
-    for (int i = 0; i < mat->rows; ++i) {
-        for (int j = 0; j < mat->cols; ++j) {
-            if (mat->type == contig) {
-                sum += ((float *)mat->m)[i*mat->rows + j]; 
-            } else if (mat->type == naive || mat->type == ac) {
+    float sum = 0;
+
+    if (mat->type == ac || mat->type == naive) {
+        for (int i = 0; i < mat->rows; ++i) {
+            for (int j = 0; j < mat->cols; ++j) {
                 sum += mat->m[i][j];
             }
+        }
+    } else {
+        for (int i = 0; i < (mat->rows * mat->cols); i++) {
+            /* annoying to recast... */
+            sum += ((float *) mat->m)[i];
         }
     }
     return sum;
@@ -41,16 +45,17 @@ long compute_sum(struct matrix *mat) {
  * @n: size of matrix (assuming square for simplicity)
  * @block: block size
  */
-void run_multiply(struct matrix* (*f) (struct matrix *, struct matrix *, struct matrix*), int n, int block, char *name, enum alloc_type type) 
+void run_multiply(void (*f) (struct matrix *, struct matrix *, struct matrix*), int n, char *name, enum alloc_type type) 
 {
-     struct matrix *a = rand_matrix(n,n, type);
-     struct matrix *b = rand_matrix(n,n, type);
-     struct matrix *c = alloc_matrix(n,n, type);
+     struct matrix *a = rand_matrix(n,n,type);
+     struct matrix *b = rand_matrix(n,n,type);
+     struct matrix *c = alloc_matrix(n,n,type);
     
      /* Time only the multiply function call */
      struct timeval start, end, diff;
      gettimeofday(&start, 0);
      f(c,a,b);
+
      gettimeofday(&end, 0);
      timersub(&end, &start, &diff);
      /* sanity check with computing sum of matrix */
@@ -69,15 +74,12 @@ int main(int argc, char *argv[]) {
     /* Technically, need to support non-square matrices, but all the results we care about are only
      * square matrices, so just accept n as a parameter */
     int n = 128;
-    int ch, b;
+    int ch;
 
     while ((ch = getopt(argc, argv, "n:b:")) != -1) {
         switch (ch) {
             case 'n':
                 n = atof(optarg);
-                break;
-            case 'b':
-                b = atof(optarg);
                 break;
             case '?':
             default:
@@ -85,19 +87,28 @@ int main(int argc, char *argv[]) {
                 exit(1);
         }
     }
-    /* Need a smarter way to choose block size */
-    b = n/2;
-    
+    /* Need a smarter way to choose block size */ 
     printf("n = %d\n", n);
     /* run it with different optimization schemes */
-    run_multiply(mult_naive, n, 0, "naive", naive);
+    /*run_multiply(mult_naive, n, "naive", naive);*/
+    run_multiply(mult_naive_kj, n, "naive_kj", naive);
+
     /* attractive chaos based implementation */
-    run_multiply(ac_mat_mul0, n, 0, "ac0", ac);
-    run_multiply(ac_mat_mul1, n, 0, "ac1", ac);
-    run_multiply(ac_mat_mul2, n, 0, "ac2", ac);
+    /*run_multiply(ac_mat_mul0, n, "ac0", ac);*/
+    /*run_multiply(ac_mat_mul1_kj, n, "ac1_kj", ac);*/
+
+#ifdef __SSE__
+    run_multiply(ac_mat_mul2, n, "ac2", ac);
+    run_multiply(ac_mat_mul7, n, "ac7", ac);
+#endif
 
 #ifdef HAVE_CBLAS
-    run_multiply(ac_mat_mul6, n, 0, "ac6", ac);
+    run_multiply(ac_mat_mul6, n, "ac6", ac);
 #endif
+    
+    /* contiguous arrays */
+    run_multiply(contig_naive, n, "contig_naive", contig);
+    run_multiply(contig_naive_par, n, "contig_naive_par", contig);
+    run_multiply(contig_blocked, n, "contig_blocked", contig);
 
 }
