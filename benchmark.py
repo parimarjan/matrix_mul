@@ -4,6 +4,7 @@ import argparse
 from collections import defaultdict
 import re
 import matplotlib.pyplot as plt
+import json
 
 NUM_TRIES = 5
 
@@ -67,18 +68,31 @@ for power in range(args.start,args.end,1):
 
 
 x_vals = [2**p for p in range(args.start, args.end, 1)]
-x_label = 'number of elements'
+x_label = 'dimension of multiplied square matrices'
 y_label = 'time in seconds'
 colors = ["r-", "b--", "g-", "c--"]
 
 i = 0
 for k,v in all_timings.iteritems():
+    # dump a json with this k
+    fname = k + '.json'
+    data = []
+    for j,val in enumerate(v): 
+        data.append([x_vals[j], val])
+    with open(fname, 'w') as outfile:
+        json.dump(data, outfile)
+
     plt.plot(x_vals, v, colors[i], label=k)
     i += 1
 
 plt.xlabel(x_label, size=15)
 plt.ylabel(y_label, size=15)
 plt.legend(loc='best')
+caption = ('Performance of various matrix multiplication routines. Naive_kj represents the',
+           'original C representation with the jth and kth loops switched. As we see it already',
+           'performs much better than naive methods. The best performance was achieved by combining',
+           'loop order switching, blocking, and parallelism') 
+plt.text(.05,.05, caption, ha='center')
 
 # plt.show()
 plt.savefig("fig.png")
