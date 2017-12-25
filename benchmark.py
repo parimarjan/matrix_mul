@@ -47,6 +47,9 @@ parser.add_argument("-start", "-s", type=int, required=False,
                     default=8, help="start index of powers")
 parser.add_argument("-end", "-e", type=int, required=False,
                     default=9, help="end index of powers")
+parser.add_argument("-file", "-f", type=str, required=False,
+                    default="fig.png", help="name of output figure")
+
 args = parser.parse_args()
 
 # power_timings = []
@@ -95,6 +98,6 @@ caption = ('Performance of various matrix multiplication routines. Naive_kj repr
 plt.text(.05,.05, caption, ha='center')
 
 # plt.show()
-plt.savefig("fig.png")
+plt.savefig(args.file)
 
 
