@@ -93,12 +93,6 @@ for k,v in all_timings.iteritems():
 plt.xlabel(x_label, size=15)
 plt.ylabel(y_label, size=15)
 plt.legend(loc='best')
-caption = ('Performance of various matrix multiplication routines. Naive_kj represents the',
-           'original C representation with the jth and kth loops switched. As we see it already',
-           'performs much better than naive methods. The best performance was achieved by combining',
-           'loop order switching, blocking, and parallelism') 
-plt.text(.05,.05, caption, ha='center')
-
 # plt.show()
 plt.savefig(args.file)
 
