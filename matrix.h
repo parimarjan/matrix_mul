@@ -21,6 +21,7 @@ struct matrix *rand_matrix(int, int, enum alloc_type);
 /* different matrix multiplication methods */
 void mult_naive(struct matrix *, struct matrix *, struct matrix *);
 void mult_naive_kj(struct matrix *, struct matrix *, struct matrix *);
+void mult_parallel_kj(struct matrix *, struct matrix *, struct matrix *);
 
 /* attractive chaos ones */
 void ac_mat_mul0(struct matrix *, struct matrix *, struct matrix *);
