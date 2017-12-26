@@ -91,8 +91,8 @@ int main(int argc, char *argv[]) {
     printf("n = %d\n", n);
     /* run it with different optimization schemes */
     run_multiply(mult_naive, n, "C-Naive", naive);
-    run_multiply(mult_naive_kj, n, "C-Naive-kj", naive);
-    run_multiply(mult_parallel_kj, n, "C-Parallel-kj", naive);
+    /*run_multiply(mult_naive_kj, n, "C-Naive-kj", naive);*/
+    /*run_multiply(mult_parallel_kj, n, "C-Parallel-kj", naive);*/
 
     /* attractive chaos based implementation */
     /*run_multiply(ac_mat_mul0, n, "ac_naive", ac);*/
@@ -110,7 +110,5 @@ int main(int argc, char *argv[]) {
     
     /* contiguous arrays */
     /*run_multiply(contig_naive_kj, n, "contig_naive", contig);*/
-    run_multiply(contig_naive_kj_par, n, "contig_naive_par", contig);
     /*run_multiply(contig_blocked, n, "contig_blocked", contig);*/
-    /*run_multiply(contig_blocked_par, n, "contig_blocked_par", contig);*/
 }

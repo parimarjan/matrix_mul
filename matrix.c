@@ -16,6 +16,9 @@
 
 #define NUM_PARALLEL_THREADS 4
 
+static int alloc_matrix_count;
+static int naive_free_count;
+
 /* From the attractive chaos repository.
  */
 struct matrix *mat_transpose(int n_rows, int n_cols, struct matrix *a)
@@ -34,6 +37,7 @@ struct matrix *mat_transpose(int n_rows, int n_cols, struct matrix *a)
 /* Frees the matrix */
 void free_matrix(struct matrix *mat) {
     if (mat->type == naive) { 
+        naive_free_count += 1;
         int r;
         for (r = 0; r < mat->rows; ++r) {
             free(mat->m[r]);
@@ -50,6 +54,7 @@ void free_matrix(struct matrix *mat) {
 
 /* does not allocate contiguous arrays. Using calloc so I dont have to set stuff to 0 later. */
 struct matrix *alloc_matrix(int rows, int cols, enum alloc_type type) { 
+     alloc_matrix_count += 1;
      struct matrix *mat = malloc(sizeof(struct matrix));
      if (type == naive) {
          float **C = (float **)calloc(rows, sizeof(float*));
@@ -166,10 +171,13 @@ void mult_parallel_kj(struct matrix *C,
 }
 
 
-/* attractivechaos stuff */
+/*************************
+ * attractivechaos stuff 
+ *************************
+ */
 void ac_mat_mul0(struct matrix *C,
-                           struct matrix *A,
-                           struct matrix *B)
+                 struct matrix *A,
+                 struct matrix *B)
 {
 	int i, j, k;
 	for (i = 0; i < A->rows; ++i) {
@@ -183,8 +191,8 @@ void ac_mat_mul0(struct matrix *C,
 }
 
 void ac_mat_mul1(struct matrix *C,
-                           struct matrix *A,
-                           struct matrix *B)
+                 struct matrix *A,
+                 struct matrix *B)
 {
     int i, j, k, n_b_rows = A->cols;
     struct matrix *bT;
@@ -203,8 +211,8 @@ void ac_mat_mul1(struct matrix *C,
 }
 
 void ac_mat_mul1_kj(struct matrix *C,
-                           struct matrix *A,
-                           struct matrix *B)
+                    struct matrix *A,
+                    struct matrix *B)
 {
     int i, j, k, n_b_rows = A->cols;
     struct matrix *bT;
@@ -294,7 +302,12 @@ void ac_mat_mul6(struct matrix *C, struct matrix *A, struct matrix *A)
  *********************************************
 */
 
-/* contiguous stuff */
+
+/*************************
+ * contiguous stuff - from 
+ * weld benchmarks
+ *************************
+ */
 void contig_blocked(struct matrix *C, struct matrix *A, struct matrix *B) {
     int block_size;
     if (A->rows > 32) block_size = A->rows / 2;
@@ -316,24 +329,6 @@ void contig_blocked(struct matrix *C, struct matrix *A, struct matrix *B) {
     }
 }
 
-void thread_workload_contig_blocked(struct matrix *C, struct matrix *A, struct matrix *B, int tid) {
-    int block_size = A->rows / 4;
-    /*int block_size = 16;*/
-    for (int kk = 0; kk < C->rows; kk += block_size) {
-        for (int ii = 0; ii < A->rows; ii += block_size) {
-            for (int jj = 0; jj < B->cols; jj += block_size) {
-                for (int k = kk; k < min(kk + block_size, C->rows); k++) {
-                    for (int i = ii+tid; i < min(ii + block_size, A->rows); i+= NUM_PARALLEL_THREADS) {
-                        for (int j = jj; j < min(jj + block_size, B->cols); j++) {
-                            contig_data(C)[i*C->rows + j] += contig_data(A)[i*A->rows + k] * contig_data(B)[k*B->cols + j];
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
 void contig_naive_kj(struct matrix *C, struct matrix *A, struct matrix *B) {
     for (int i = 0; i < A->rows; i++) {
         for (int k = 0; k < C->rows; k++) {
@@ -344,34 +339,7 @@ void contig_naive_kj(struct matrix *C, struct matrix *A, struct matrix *B) {
     }
 }
 
-
-void thread_workload_contig_naive(struct matrix *C, struct matrix *A, struct matrix *B, int tid) {
-    int start, end;
-    get_thread_range(C->rows, NUM_PARALLEL_THREADS, tid, &start, &end);
-
-    for (int i = start; i < end; i++) {
-        for (int k = 0; k < C->rows; k++) {
-            for (int j = 0; j < B->rows; j++) {
-                contig_data(C)[i*C->rows + j] += contig_data(A)[i*A->rows + k] * contig_data(B)[k*B->rows + j];
-            }
-        }
-    }
-}
-
-/* Parallelizing just the outer loop */
-void contig_naive_kj_par(struct matrix *C, struct matrix *A, struct matrix *B) {
-#pragma omp parallel for
-    for (int i = 0; i < NUM_PARALLEL_THREADS; i++) {
-      thread_workload_contig_naive(C, A, B, i);
-    }
-}
-
-/* Again, just parallelizing the outermost loop */
-void contig_blocked_par(struct matrix *C, struct matrix *A, struct matrix *B) {
-#pragma omp parallel for
-    for (int i = 0; i < NUM_PARALLEL_THREADS; i++) {
-      thread_workload_contig_blocked(C, A, B, i);
-    }
-}
-
-
+/*************************
+ * end of contiguous stuff
+ *************************
+*/

@@ -34,9 +34,6 @@ void ac_mat_mul2(struct matrix *, struct matrix *, struct matrix *);
 void ac_mat_mul6(struct matrix *, struct matrix *, struct matrix *);
 void ac_mat_mul7(struct matrix *, struct matrix *, struct matrix *);
 
-/* contiguous allocation */
+/* contiguous allocation from weld */
 void contig_naive_kj(struct matrix *, struct matrix *, struct matrix *);
-void contig_naive_kj_par(struct matrix *, struct matrix *, struct matrix *);
-
 void contig_blocked(struct matrix *, struct matrix *, struct matrix *);
-void contig_blocked_par(struct matrix *, struct matrix *, struct matrix *);
