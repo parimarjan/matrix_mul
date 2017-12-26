@@ -96,7 +96,6 @@ struct matrix *rand_matrix(int rows, int cols, enum alloc_type type) {
      return mat;
 }
 
-/* TODO: switch order of j and k loops */
 void mult_naive(struct matrix *C,
 	     struct matrix *A,
          struct matrix *B)
@@ -127,6 +126,43 @@ void mult_naive_kj(struct matrix *C,
 	       }
 	    } 
      }
+}
+
+void get_thread_range(int total_work, int num_threads, int tid, int *start, int *end) {
+    /*dividing up grace bucket indices based on tid. The only overlap between*/
+    /*threads will be reading field values - but that should not be a prob. */
+    *start = (total_work / num_threads) * tid;
+    *end = *start + (total_work / num_threads);
+    if (*end > total_work || tid == num_threads - 1) {
+      *end = total_work;
+    }
+}
+
+void thread_workload_parallel(struct matrix *C,
+                              struct matrix *A,
+                              struct matrix *B,
+                              int tid)
+{
+    int start, end;
+    get_thread_range(C->rows, NUM_PARALLEL_THREADS, tid, &start, &end);
+
+    for (int i = start; i < end; i++) {
+        for (int k = 0; k < C->rows; k++) {
+            for (int j = 0; j < B->rows; j++) {
+                C->m[i][j] += A->m[i][k] * B->m[k][j];
+            }
+        }
+    }
+}
+
+void mult_parallel_kj(struct matrix *C,
+                      struct matrix *A,
+                      struct matrix *B)
+{
+#pragma omp parallel for
+    for (int i = 0; i < NUM_PARALLEL_THREADS; i++) {
+      thread_workload_parallel(C, A, B, i);
+    }
 }
 
 
@@ -308,15 +344,6 @@ void contig_naive_kj(struct matrix *C, struct matrix *A, struct matrix *B) {
     }
 }
 
-void get_thread_range(int total_work, int num_threads, int tid, int *start, int *end) {
-    /*dividing up grace bucket indices based on tid. The only overlap between*/
-    /*threads will be reading field values - but that should not be a prob. */
-  *start = (total_work / num_threads) * tid;
-  *end = *start + (total_work / num_threads);
-  if (*end > total_work || tid == num_threads - 1) {
-      *end = total_work;
-  }
-}
 
 void thread_workload_contig_naive(struct matrix *C, struct matrix *A, struct matrix *B, int tid) {
     int start, end;
